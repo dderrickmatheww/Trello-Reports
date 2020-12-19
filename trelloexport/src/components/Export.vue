@@ -13,6 +13,8 @@
 
 <script>
 import { mapState } from 'vuex';
+import saveExcel from '@progress/kendo-vue-excel-export';
+
 export default {
   name: 'Export',
   methods: {
@@ -20,18 +22,34 @@ export default {
       this.$store.commit('selectTrelloBoard', item);
     },
     exportTrelloData: function (trelloData) {
+      let cardSelectAll = false;
       let cards = trelloData.cards.filter((data) => {
-        if((data.labels == 0 && data.idMembers.length > 0) && (data.name.includes('TFS') || data.name.includes('TBI')) && (!data.name.includes('PROC'))) {
+        if(cardSelectAll) {
           return data;
         }
         else {
           var values = Object.values(data.labels);
-          if(values.includes('Priority for Current Sprint') && (data.name.includes('TFS') || data.name.includes('TBI')) && (!data.name.includes('PROC'))) {
+          if(values.includes('Priority for Current Sprint') 
+          && (
+            !values.includes('Development Complete') 
+            || !values.includes('UAT TBI P - Tested & Approved') 
+            || !values.includes('PROD TBI P - Tested & Approved')
+            )
+          && data.name.includes('Story Points:')
+          && (data.name.includes('TFS') || data.name.includes('TBI'))
+          && (!data.name.includes('PROC'))) {
             return data;
           }
         }
       });
-      console.log(cards);
+      saveExcel({
+          data: cards,
+          fileName: "TrelloReports",
+          columns: [
+            { field: 'Name', title: 'Trello Card'},
+            { field: 'Story Points', title: cards.name.split('Story Points:')[1].split('/')[1] }
+        ]
+      });
     }
   },
   computed: mapState({
