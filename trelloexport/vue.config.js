@@ -1,5 +1,5 @@
 module.exports = {
-    publicPath: '/',
+    publicPath: '/Trello-Exports/',
     configureWebpack: () => {
         var obj = {
             externals: {
