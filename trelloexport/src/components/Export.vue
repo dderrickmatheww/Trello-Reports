@@ -24,13 +24,19 @@ export default {
     exportTrelloData: function (trelloData) {
       //Left off - the data obj in the filter is not returning anything to the export
       let cardSelectAll = false;
-      console.log(trelloData.cards);
       let cards = trelloData.cards.filter((data) => {
         if(cardSelectAll) {
           return data;
         }
         else {
           var values = data.labels ? Object.values(data.labels) : [];
+          
+          //Grabs all cards that have:
+          //@1) Have ['Story Points', 'TBIIP:', 'TFS'] in the title
+          //@2) Do not have ['PROC', 'SP:'] in the title
+          //@3) That have any of these labels: ['Development Complete', 'In Development', 'Priority for Current Sprint labels']
+          //@4) That do not have these labels: ['UAT TBI P - Tested & Approved', 'PROD TBI P - Tested & Approved', 'More Info Required']
+
           for(var i = 0; i < values.length; i++) {
             if (
               (
@@ -56,20 +62,11 @@ export default {
       var labelArr = [];
       cards.map((data) => {
         labelArr.push(data.labels);
-        data['storyPoint'] = data.name.includes('Story Points:') ? data.name.split('Story Points:')[1] : null;
-        var storyPoint;
-        if(data.storyPoint !== null && data.storyPoint.includes('/')) {
-          let storyPointPar = data.name.split('/')[1];
-          console.log(storyPointPar);
-          storyPoint = parseInt(storyPointPar.match(/(\d+)/));
-        }
-        if(data.storyPoint !== null && data.storyPoint.includes(')')){
-          storyPoint = parseInt(data.storyPoint.match(/(\d+)/));
-        }
+        var storyPoint = data.name.split('Story Points:')[1];
+        storyPoint = parseInt(storyPoint.match(/(\d+)/));
         data['storyPoint'] = storyPoint;
         return data;
       });
-      console.log(cards);
       saveExcel({
           data: cards,
           fileName: "TrelloReports",
