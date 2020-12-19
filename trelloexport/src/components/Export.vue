@@ -13,7 +13,7 @@
 
 <script>
 import { mapState } from 'vuex';
-//import { saveExcel } from '@progress/kendo-vue-excel-export';
+import { saveExcel } from '@progress/kendo-vue-excel-export';
 
 export default {
   name: 'Export',
@@ -24,41 +24,57 @@ export default {
     exportTrelloData: function (trelloData) {
       //Left off - the data obj in the filter is not returning anything to the export
       let cardSelectAll = false;
+      console.log(trelloData.cards);
       let cards = trelloData.cards.filter((data) => {
         if(cardSelectAll) {
           return data;
         }
         else {
-          var values = Object.values(data.labels);
-          console.log(values);
-          if(values.includes('Priority for Current Sprint') 
-          && (
-            !values.includes('Development Complete') 
-            || !values.includes('UAT TBI P - Tested & Approved') 
-            || !values.includes('PROD TBI P - Tested & Approved')
-            )
-          && (data.name.includes('TFS') || data.name.includes('TBI') || data.name.includes('Story Points'))
-          && (!data.name.includes('PROC'))) {
-            return data;
+          var values = data.labels ? Object.values(data.labels) : [];
+          for(var i = 0; i < values.length; i++) {
+            if (
+              (
+                !values[i].name.includes('UAT TBI P - Tested & Approved') 
+                || !values[i].name.includes('PROD TBI P - Tested & Approved')
+                || !values[i].name.includes('More Info Required')
+              )
+              &&
+              (
+                values[i].name.includes('Development Complete')
+                || values[i].name.includes('In Development')
+                || values[i].name.includes('Priority for Current Sprint')
+              )
+              && (data.name.includes('TBIP:') || data.name.includes('TFS'))
+              && (!data.name.includes('PROC') || !data.name.includes('SP:'))
+            ) {
+              return data;
+            }
           }
         }
       });
+      var labelArr = [];
       cards.map((data) => {
-        data['storyPoint'] = data.name.split('Story Points:')[1];
-        if(data.storyPoint.includes('/')) {
-          data['storyPoint'] = data.name.split('/')[1];
+        labelArr.push(data.labels);
+        data['storyPoint'] = data.name.includes('Story Points:') ? data.name.split('Story Points:')[1] : null;
+        var storyPoint;
+        if(data.storyPoint !== null && data.storyPoint.includes('/')) {
+          storyPoint = parseInt(data.name.split('/')[1].replace(')', ""));
         }
+        if(data.storyPoint !== null && data.storyPoint.includes(')')){
+          storyPoint = parseInt(data.storyPoint.replace(')', ""));
+        }
+        data['storyPoint'] = storyPoint;
         return data;
-      })
+      });
       console.log(cards);
-      // saveExcel({
-      //     data: cards,
-      //     fileName: "TrelloReports",
-      //     columns: [
-      //       { field: 'Name', title: 'Trello Card'},
-      //       { field: 'storyPoints', title: 'Story Points' }
-      //   ]
-      // });
+      saveExcel({
+          data: cards,
+          fileName: "TrelloReports",
+          columns: [
+            { field: 'name', title: 'Trello Card'},
+            { field: 'storyPoint', title: 'Story Points' }
+        ]
+      });
     }
   },
   computed: mapState({
