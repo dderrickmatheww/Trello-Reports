@@ -45,6 +45,7 @@ export default {
                 || values[i].name.includes('Priority for Current Sprint')
               )
               && (data.name.includes('TBIP:') || data.name.includes('TFS'))
+              && (data.name.includes('Story Points'))
               && (!data.name.includes('PROC') || !data.name.includes('SP:'))
             ) {
               return data;
@@ -58,10 +59,12 @@ export default {
         data['storyPoint'] = data.name.includes('Story Points:') ? data.name.split('Story Points:')[1] : null;
         var storyPoint;
         if(data.storyPoint !== null && data.storyPoint.includes('/')) {
-          storyPoint = parseInt(data.name.split('/')[1].replace(')', ""));
+          let storyPointPar = data.name.split('/')[1];
+          console.log(storyPointPar);
+          storyPoint = parseInt(storyPointPar.match(/(\d+)/));
         }
         if(data.storyPoint !== null && data.storyPoint.includes(')')){
-          storyPoint = parseInt(data.storyPoint.replace(')', ""));
+          storyPoint = parseInt(data.storyPoint.match(/(\d+)/));
         }
         data['storyPoint'] = storyPoint;
         return data;
